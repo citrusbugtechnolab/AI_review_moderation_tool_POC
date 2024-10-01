@@ -115,16 +115,20 @@ if __name__ == "__main__":
     review_form = st.form("review_form", clear_on_submit=True)
     review_form.title("Review Moderation Bot")
 
+    review_form.markdown("")
+    review = review_form.text_area("Review", placeholder="Provide the content of the review you wish to analyze").strip()
+    stakeholder = review_form.text_input(
+        "Stakeholder", placeholder="Enter the name of the stakeholder (e.g., Restaurant or Hotel Name)"
+    ).strip()
+    platform = review_form.selectbox(
+        "Platform", options=["", "Google", "Yelp", "TripAdvisor", "Other"], help="Select the platform where the review was posted"
+    )
+    review_form.markdown("\nRating")
     selected_rating = review_form.feedback("stars")
     rating = 0
     if selected_rating is not None:
         rating = selected_rating + 1
-    review = review_form.text_area("Review", placeholder="Enter the review").strip()
-    stakeholder = review_form.text_input(
-        "Stakeholder", placeholder="Enter the stakeholder"
-    ).strip()
-
-    all_fields = review and stakeholder
+    all_fields = review and stakeholder and platform
     submitted = review_form.form_submit_button(
         label="Analyze Review", disabled=st.session_state.analysis_started
     )
@@ -138,6 +142,7 @@ if __name__ == "__main__":
                     "review": review,
                     "stakeholder": stakeholder,
                     "rating": rating,
+                    "platform": platform,
                 }
                 rule_based_moderation_output, ml_based_moderation_output = (
                     SightEngineService().get_sightengine_response(text=review)
@@ -158,7 +163,10 @@ if __name__ == "__main__":
     # Display the review analysis
     if st.session_state.review_analysis:
         st.title("Review Analysis")
-        st.markdown(f"**Review:** {review}")
+        st.markdown("---")
+        st.markdown(f"**Review content:** {review}")
         st.markdown(f"**Stakeholder:** {stakeholder}")
         st.markdown(f"**Rating:** {rating}")
+        st.markdown(f"**Platform where review was posted:** {platform}")
+        st.markdown("---")
         st.markdown(st.session_state.review_analysis)
